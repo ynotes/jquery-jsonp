@@ -18,6 +18,7 @@
 
 	// Generic callback
 	function genericCallback( data ) {
+		// lastValue 保存 json data
 		lastValue = [ data ];
 	}
 
@@ -32,6 +33,7 @@
 	}
 
 	var // String constants (for better minification)
+		// STR 表示 String，压缩率提高了一点点，但是阅读费劲
 		STR_ASYNC = "async",
 		STR_CHARSET = "charset",
 		STR_EMPTY = "",
@@ -100,21 +102,27 @@
 			dataFilter = xOptions.dataFilter,
 			callbackParameter = xOptions.callbackParameter,
 			successCallbackName = xOptions.callback,
+			// 看起来 cache, pageCache 要一起使用
 			cacheFlag = xOptions.cache,
 			pageCacheFlag = xOptions.pageCache,
+			// script charset
 			charset = xOptions.charset,
 			url = xOptions.url,
+			// script src url qs
 			data = xOptions.data,
+			// number
 			timeout = xOptions.timeout,
 			pageCached,
 
 			// Abort/done flag
+			// 为什么不用 boolean?
 			done = 0,
 
 			// Life-cycle functions
 			cleanUp = noop,
 
 			// Support vars
+			// 未使用
 			supportOnload,
 			supportOnreadystatechange,
 
@@ -151,12 +159,16 @@
 		url += data ? ( qMarkOrAmp( url ) + data ) : STR_EMPTY;
 
 		// Add callback parameter if provided as option
+		// 自定义 callback 参数
 		callbackParameter && ( url += qMarkOrAmp( url ) + encodeURIComponent( callbackParameter ) + "=?" );
 
 		// Add anticache parameter if needed
+		// 添加 _timestamp=
 		!cacheFlag && !pageCacheFlag && ( url += qMarkOrAmp( url ) + "_" + ( new Date() ).getTime() + "=" );
 
 		// Replace last ? by callback parameter
+		// 将 callback=? 替换为 callback=successCallbackName
+		// 不指定自定义参数的情况下 url 必须有 callback=?
 		url = url.replace( /=\?(&|$)/ , "=" + successCallbackName + "$1" );
 
 		// Success notifier
@@ -201,6 +213,7 @@
 
 			// Install the generic callback
 			// (BEWARE: global namespace pollution ahoy)
+			// 添加全局函数，默认名字为 _jqjsp
 			win[ successCallbackName ] = genericCallback;
 
 			// Create the script tag
@@ -224,22 +237,24 @@
 
 			// Internet Explorer: event/htmlFor trick
 			if ( oldIE ) {
+				// 为
 				script.htmlFor = script.id;
 				script.event = STR_ON_CLICK;
 			}
 
 			// Attached event handlers
 			script[ STR_ON_LOAD ] = script[ STR_ON_ERROR ] = script[ STR_ON_READY_STATE_CHANGE ] = function ( result ) {
-
 				// Test readyState if it exists
 				if ( !script[ STR_READY_STATE ] || !/i/.test( script[ STR_READY_STATE ] ) ) {
 
 					try {
-
+						// script.onclick() 作用是？
 						script[ STR_ON_CLICK ] && script[ STR_ON_CLICK ]();
 
 					} catch( _ ) {}
 
+					// 如果 script 加载失败，lastValue 没有值，继而调用 notifyError()
+					// 通过这种方式通知错误
 					result = lastValue;
 					lastValue = 0;
 					result ? notifySuccess( result[ 0 ] ) : notifyError( STR_ERROR );
